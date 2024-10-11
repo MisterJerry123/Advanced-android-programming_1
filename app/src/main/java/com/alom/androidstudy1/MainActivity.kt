@@ -19,23 +19,18 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        memoViewModel = ViewModelProvider(this).get(MemoViewModel::class.java)
-
         val sharedPreferences = getSharedPreferences("memo", MODE_PRIVATE)
-        val editor = sharedPreferences.edit()
-        Log.d(TAG, sharedPreferences.getString("memo","").toString())
-        val initData = sharedPreferences.getString("memo","").toString()
+        val memoRepository = MemoRepositoryImpl(sharedPreferences)
 
-        binding.etMemo.setText(initData)
-        Log.d(TAG+"textview", binding.etMemo.text.toString())
+        val memoViewModelFactory = MemoViewModelFactory(memoRepository)
+
+        memoViewModel = ViewModelProvider(this,memoViewModelFactory).get(MemoViewModel::class.java)
 
         lifecycleScope.launch{
             lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED){
                 launch {
                     memoViewModel.currentValue.collect{
-                        editor.putString("memo",it)
-                        editor.apply()
+                        binding.etMemo.setText(it)
                     }
                 }
             }
